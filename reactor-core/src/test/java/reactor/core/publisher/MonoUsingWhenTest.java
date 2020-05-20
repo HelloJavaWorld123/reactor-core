@@ -357,47 +357,34 @@ public class MonoUsingWhenTest {
 		    .verifyComplete();
 	}
 
-	// == scanUnsafe tests ==
+	// == scan tests ==
 
 	@Test
 	public void scanOperator() {
-		MonoUsingWhen<Object, Object> op = new MonoUsingWhen<>(Mono.empty(), Mono::just, Mono::just, Mono::just, Mono::just);
+		MonoUsingWhen<Object, Object> test = new MonoUsingWhen<>(Mono.empty(), Mono::just, Mono::just, Mono::just, Mono::just);
 
-		assertThat(op.scanUnsafe(Attr.ACTUAL))
-				.isSameAs(op.scanUnsafe(Attr.ACTUAL_METADATA))
-				.isSameAs(op.scanUnsafe(Attr.BUFFERED))
-				.isSameAs(op.scanUnsafe(Attr.CAPACITY))
-				.isSameAs(op.scanUnsafe(Attr.CANCELLED))
-				.isSameAs(op.scanUnsafe(Attr.DELAY_ERROR))
-				.isSameAs(op.scanUnsafe(Attr.ERROR))
-				.isSameAs(op.scanUnsafe(Attr.LARGE_BUFFERED))
-				.isSameAs(op.scanUnsafe(Attr.NAME))
-				.isSameAs(op.scanUnsafe(Attr.PARENT))
-				.isSameAs(op.scanUnsafe(Attr.RUN_ON))
-				.isSameAs(op.scanUnsafe(Attr.PREFETCH))
-				.isSameAs(op.scanUnsafe(Attr.REQUESTED_FROM_DOWNSTREAM))
-				.isSameAs(op.scanUnsafe(Attr.TERMINATED))
-				.isSameAs(op.scanUnsafe(Attr.TAGS))
-				.isNull();
+		assertThat(test.scan(Attr.RUN_STYLE)).isEqualTo(Attr.RunStyle.SYNC);
 	}
 
 	@Test
 	public void scanResourceSubscriber() {
 		CoreSubscriber<Integer> actual = new LambdaSubscriber<>(null, e -> {}, null, null);
-		ResourceSubscriber<String, Integer> op = new ResourceSubscriber<>(actual, s -> Mono.just(s.length()), Mono::just, Mono::just, Mono::just, true);
+		ResourceSubscriber<String, Integer> test = new ResourceSubscriber<>(actual, s -> Mono.just(s.length()), Mono::just, Mono::just, Mono::just, true);
 		final Subscription parent = Operators.emptySubscription();
-		op.onSubscribe(parent);
+		test.onSubscribe(parent);
 
-		assertThat(op.scan(Attr.PARENT)).as("PARENT").isSameAs(parent);
-		assertThat(op.scan(Attr.ACTUAL)).as("ACTUAL").isSameAs(actual);
+		assertThat(test.scan(Attr.PARENT)).as("PARENT").isSameAs(parent);
+		assertThat(test.scan(Attr.ACTUAL)).as("ACTUAL").isSameAs(actual);
 
-		assertThat(op.scan(Attr.PREFETCH)).as("PREFETCH").isEqualTo(Integer.MAX_VALUE);
+		assertThat(test.scan(Attr.PREFETCH)).as("PREFETCH").isEqualTo(Integer.MAX_VALUE);
 
-		assertThat(op.scan(Attr.TERMINATED)).as("TERMINATED").isFalse();
-		op.resourceProvided = true;
-		assertThat(op.scan(Attr.TERMINATED)).as("TERMINATED resourceProvided").isTrue();
+		assertThat(test.scan(Attr.TERMINATED)).as("TERMINATED").isFalse();
+		test.resourceProvided = true;
+		assertThat(test.scan(Attr.TERMINATED)).as("TERMINATED resourceProvided").isTrue();
 
-		assertThat(op.scanUnsafe(Attr.CANCELLED)).as("CANCELLED not supported").isNull();
+		assertThat(test.scan(Attr.RUN_STYLE)).isEqualTo(Attr.RunStyle.SYNC);
+
+		assertThat(test.scan(Attr.CANCELLED)).as("CANCELLED not supported").isNull();
 	}
 
 }
